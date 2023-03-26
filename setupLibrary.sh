@@ -45,7 +45,7 @@ function changeSSHConfig() {
     
     sudo sed -re 's/^(\#?)(PasswordAuthentication)([[:space:]]+)yes/\2\3no/' -i."$(echo 'old')" /etc/ssh/sshd_config
     sudo sed -re 's/^(\#?)(PermitRootLogin)([[:space:]]+)(.*)/PermitRootLogin no/' -i /etc/ssh/sshd_config
-    sudo sed -re 's/^(\#?)(Port)([[:space:]]+)(.*)/Port "${port}"/' -i /etc/ssh/sshd_config
+    sudo sed -re 's/^(\#?)(Port)([[:space:]]+)(.*)/Port ${port}/' -i /etc/ssh/sshd_config
     sudo sed -re 's/^(\#?)(PubkeyAuthentication)([[:space:]]+)(.*)/PubkeyAuthentication yes/' -i /etc/ssh/sshd_config
 }
 
@@ -94,7 +94,7 @@ function disableSudoPassword() {
     local username="${1}"
 
     sudo cp /etc/sudoers /etc/sudoers.bak
-    sudo bash -c "echo '${1} ALL=(ALL) NOPASSWD: ALL' | (EDITOR='tee -a' visudo)"
+    sudo bash -c "echo '${username} ALL=(ALL) NOPASSWD: ALL' | (EDITOR='tee -a' visudo)"
 }
 
 # Reverts the original /etc/sudoers file before this script is ran
