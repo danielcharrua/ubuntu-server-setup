@@ -19,7 +19,6 @@ output_file="output.log"
 
 function main() {
     echo "Welcome to the Host initialization script\n"
-    createUser
 
     # Run setup functions
     trap cleanup EXIT SIGHUP SIGINT SIGTERM
