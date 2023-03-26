@@ -18,23 +18,18 @@ includeDependencies
 output_file="output.log"
 
 function main() {
-    read -rp "Do you want to create a new non-root user? (Recommended) [Y/N] " createUser
+    echo "Welcome to the Host initialization script\n"
+    createUser
 
     # Run setup functions
     trap cleanup EXIT SIGHUP SIGINT SIGTERM
 
-    if [[ $createUser == [nN] ]]; then
-        username=$(whoami)
-        updateUserAccount "${username}"
-    elif [[ $createUser == [yY] ]]; then
-        read -rp "Enter the username of the new user account: " username
-        addUserAccount "${username}"
-    else
-	echo 'This is not a valid choice!'
-	exit 1
-    fi
+    read -rp "Enter the username of the new user account: " username
+    addUserAccount "${username}"
+
 
     read -rp $'Paste in the public SSH key for the new user:\n' sshKey
+    read -rp $'Select the SSH port:\n' sshPort
     echo 'Running setup script...'
     logTimestamp "${output_file}"
 
@@ -43,13 +38,10 @@ function main() {
 
     disableSudoPassword "${username}"
     addSSHKey "${username}" "${sshKey}"
-    changeSSHConfig
-    setupUfw
-
-    if ! hasSwap; then
-        setupSwap
-    fi
-
+    changeSSHConfig "${sshPort}"
+    
+    setupUfw "${sshPort}"
+    
     setupTimezone
 
     echo "Configuring System Time... " >&3
@@ -60,17 +52,6 @@ function main() {
     cleanup
 
     echo "Setup Done! Log file is located at ${output_file}" >&3
-}
-
-function setupSwap() {
-    createSwap
-    mountSwap
-    tweakSwapSettings "10" "50"
-    saveSwapSettings "10" "50"
-}
-
-function hasSwap() {
-    [[ "$(sudo swapon -s)" == *"/swapfile"* ]]
 }
 
 function cleanup() {
@@ -89,10 +70,10 @@ function logTimestamp() {
 }
 
 function setupTimezone() {
-    echo -ne "Enter the timezone for the server (Default is 'Asia/Singapore'):\n" >&3
+    echo -ne "Enter the timezone for the server (Default is 'Madrid/Europe'):\n" >&3
     read -r timezone
     if [ -z "${timezone}" ]; then
-        timezone="Asia/Singapore"
+        timezone="Madrid/Europe"
     fi
     setTimezone "${timezone}"
     echo "Timezone is set to $(cat /etc/timezone)" >&3
