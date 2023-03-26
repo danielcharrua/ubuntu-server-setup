@@ -3,16 +3,10 @@
 # Add the new user account
 # Arguments:
 #   Account Username
-#   Flag to determine if user account is added silently. (With / Without GECOS prompt)
 function addUserAccount() {
     local username=${1}
-    local silent_mode=${2}
 
-    if [[ ${silent_mode} == "true" ]]; then
-        sudo adduser --disabled-password --gecos '' "${username}"
-    else
-        sudo adduser --disabled-password "${username}"
-    fi
+    sudo adduser --disabled-password --gecos '' "${username}"
 
     sudo usermod -aG sudo "${username}"
     sudo passwd -d "${username}"
