@@ -47,7 +47,7 @@ function main() {
     echo "Configuring System Time... " >&3
     configureNTP
 
-    service ssh restart
+    sudo service ssh restart
 
     cleanup
 
