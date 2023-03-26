@@ -45,7 +45,7 @@ function changeSSHConfig() {
     
     sudo sed -re 's/^(\#?)(PasswordAuthentication)([[:space:]]+)yes/\2\3no/' -i."$(echo 'old')" /etc/ssh/sshd_config
     sudo sed -re 's/^(\#?)(PermitRootLogin)([[:space:]]+)(.*)/PermitRootLogin no/' -i /etc/ssh/sshd_config
-    sudo sed -re 's/^(\#?)(Port)([[:space:]]+)(.*)/Port ${port}/' -i /etc/ssh/sshd_config
+    sudo sed -re "s/^(\#?)(Port)([[:space:]]+)(.*)/Port ${port}/" -i /etc/ssh/sshd_config
     sudo sed -re 's/^(\#?)(PubkeyAuthentication)([[:space:]]+)(.*)/PubkeyAuthentication yes/' -i /etc/ssh/sshd_config
 }
 
