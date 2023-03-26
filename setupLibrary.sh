@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# Update the user account
-# Arguments:
-#   Account Username
-function updateUserAccount() {
-    local username=${1}
-    
-    sudo passwd -d "${username}"
-    sudo usermod -aG sudo "${username}"
-}
-
 # Add the new user account
 # Arguments:
 #   Account Username
@@ -54,61 +44,26 @@ function execAsUser() {
 
 # Modify the sshd_config file
 # shellcheck disable=2116
+# Arguments:
+#   Account SSH Port
 function changeSSHConfig() {
+    local port=${1}
+    
     sudo sed -re 's/^(\#?)(PasswordAuthentication)([[:space:]]+)yes/\2\3no/' -i."$(echo 'old')" /etc/ssh/sshd_config
     sudo sed -re 's/^(\#?)(PermitRootLogin)([[:space:]]+)(.*)/PermitRootLogin no/' -i /etc/ssh/sshd_config
+    sudo sed -re 's/^(\#?)(Port)([[:space:]]+)(.*)/Port "${port}"/' -i /etc/ssh/sshd_config
+    sudo sed -re 's/^(\#?)(PubkeyAuthentication)([[:space:]]+)(.*)/PubkeyAuthentication yes/' -i /etc/ssh/sshd_config
 }
 
 # Setup the Uncomplicated Firewall
+# Arguments:
+#   Account SSH Port
 function setupUfw() {
+    local port=${1}
+    
     sudo apt-get install ufw
-    sudo ufw allow OpenSSH
+    sudo ufw allow "${port}"
     yes y | sudo ufw enable
-}
-
-# Create the swap file based on amount of physical memory on machine (Maximum size of swap is 4GB)
-function createSwap() {
-   local swapmem=$(($(getPhysicalMemory) * 2))
-
-   # Anything over 4GB in swap is probably unnecessary as a RAM fallback
-   if [ ${swapmem} -gt 4 ]; then
-        swapmem=4
-   fi
-
-   sudo fallocate -l "${swapmem}G" /swapfile
-   sudo chmod 600 /swapfile
-   sudo mkswap /swapfile
-   sudo swapon /swapfile
-}
-
-# Mount the swapfile
-function mountSwap() {
-    sudo cp /etc/fstab /etc/fstab.bak
-    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-}
-
-# Modify the swapfile settings
-# Arguments:
-#   new vm.swappiness value
-#   new vm.vfs_cache_pressure value
-function tweakSwapSettings() {
-    local swappiness=${1}
-    local vfs_cache_pressure=${2}
-
-    sudo sysctl vm.swappiness="${swappiness}"
-    sudo sysctl vm.vfs_cache_pressure="${vfs_cache_pressure}"
-}
-
-# Save the modified swap settings
-# Arguments:
-#   new vm.swappiness value
-#   new vm.vfs_cache_pressure value
-function saveSwapSettings() {
-    local swappiness=${1}
-    local vfs_cache_pressure=${2}
-
-    echo "vm.swappiness=${swappiness}" | sudo tee -a /etc/sysctl.conf
-    echo "vm.vfs_cache_pressure=${vfs_cache_pressure}" | sudo tee -a /etc/sysctl.conf
 }
 
 # Set the machine's timezone
@@ -135,18 +90,6 @@ function configureNTP() {
         sudo service ntp stop
         sudo ntpd -gq
         sudo service ntp start
-    fi
-}
-
-# Gets the amount of physical memory in GB (rounded up) installed on the machine
-function getPhysicalMemory() {
-    local phymem
-    phymem="$(free -g|awk '/^Mem:/{print $2}')"
-    
-    if [[ ${phymem} == '0' ]]; then
-        echo 1
-    else
-        echo "${phymem}"
     fi
 }
 
